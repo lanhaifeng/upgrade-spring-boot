@@ -1,6 +1,8 @@
 package com.hzmc.upgrade.spring.boot.autoconfigure;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.core.io.Resource;
 
 /**
  * upgrade-spring-boot
@@ -13,7 +15,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = UpgradeProperties.UPGRADE_PREFIX)
 public class UpgradeProperties {
 
-    public static final String UPGRADE_PREFIX = "UPGRADE";
+    public static final String UPGRADE_PREFIX = "upgrade";
 
+    @Value("classpath*:**-upgrade.properties")
+    private Resource[] configResources;
 
+    public Resource[] getConfigResources() {
+        return configResources;
+    }
 }

@@ -6,7 +6,6 @@
 		<groupId>com.hzmc</groupId>
 		<artifactId>upgrade-spring-boot</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
-		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
 	<artifactId>upgrade-spring-boot-starter</artifactId>
@@ -40,7 +39,11 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-jdbc</artifactId>
-			<!--<version>1.5.10.RELEASE</version>-->
+		</dependency>
+
+		<dependency>
+			<groupId>com.baseframework</groupId>
+			<artifactId>utils</artifactId>
 		</dependency>
 	</dependencies>
 

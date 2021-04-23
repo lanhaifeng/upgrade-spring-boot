@@ -6,7 +6,6 @@
 		<groupId>com.hzmc</groupId>
 		<artifactId>upgrade-spring-boot</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
-		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
 	<artifactId>upgrade-spring-boot-test</artifactId>

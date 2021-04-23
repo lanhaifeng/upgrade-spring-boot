@@ -1,4 +1,4 @@
-package com.hzmc.upgrade.spring.boot.starter.init;
+package com.hzmc.upgrade.spring.boot.starter.upgrade;
 
 import com.hzmc.upgrade.spring.boot.autoconfigure.domain.ComponentUpgradeConfig;
 import org.slf4j.Logger;
@@ -7,22 +7,22 @@ import org.slf4j.LoggerFactory;
 /**
  * upgrade-spring-boot
  * 2021/4/20 16:48
- * 初始化所需环境
+ * 环境升级
  *
  * @author lanhaifeng
  * @since
  **/
-public interface InitEnvironment {
+public interface UpgradeEnvironment {
 
-	static Logger logger = LoggerFactory.getLogger(InitEnvironment.class);
+	static Logger logger = LoggerFactory.getLogger(UpgradeEnvironment.class);
 
 	/**
 	 * 2021/4/21 14:21
-	 * 初始化
+	 * 升级
 	 *
-	 * @param config
+	 * @param  config
 	 * @author lanhaifeng
 	 * @return void
 	 */
-	void init(ComponentUpgradeConfig config);
+	void upgrade(ComponentUpgradeConfig config);
 }

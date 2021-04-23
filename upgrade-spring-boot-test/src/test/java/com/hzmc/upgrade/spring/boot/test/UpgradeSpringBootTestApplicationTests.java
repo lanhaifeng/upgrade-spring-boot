@@ -1,13 +1,13 @@
 package com.hzmc.upgrade.spring.boot.test;
 
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class UpgradeSpringBootTestApplicationTests {
+public class UpgradeSpringBootTestApplicationTests {
 
 	@Test
-	void contextLoads() {
+	public void contextLoads() {
 	}
 
 }
