@@ -90,6 +90,10 @@ public class ComponentVersionDelegate {
 		}
 		config.getBackupTables().forEach(tableName->{
 			String backupTable = tableName + config.getBackupTableSuffix();
+			if(!componentVersionProcessor.tableExist(tableName)){
+				logger.warn("待备份表{}不存在，不需备份", tableName);
+				return;
+			}
 			if(componentVersionProcessor.tableExist(backupTable)){
 				logger.info("备份表{}已存在，删除备份表{}", backupTable, backupTable);
 				componentVersionProcessor.dropTable(backupTable);
