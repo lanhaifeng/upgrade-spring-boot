@@ -51,4 +51,7 @@ public interface ComponentVersionMapper {
 			" where component_name = #{componentName}")
 	@ResultMap("ComponentVersionMap")
 	ComponentVersion getComponentVersion(String componentName);
+
+	@Select("show tables like #{componentName}")
+	List<String> showTables(String componentName);
 }
