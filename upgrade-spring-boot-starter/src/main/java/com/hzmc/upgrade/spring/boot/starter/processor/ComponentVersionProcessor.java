@@ -33,16 +33,6 @@ public interface ComponentVersionProcessor extends UpgradeProcessor {
 	String getVersionInitTableSql();
 
 	/**
-	 * 2021/4/21 15:40
-	 * 获取版本表名是否存在检验SQL
-	 *
-	 * @param  tableName
-	 * @author lanhaifeng
-	 * @return java.lang.String
-	 */
-	String getVersionCheckTableSql(String tableName);
-
-	/**
 	 * 2021/4/21 16:15
 	 * 检测表是否存在
 	 *
