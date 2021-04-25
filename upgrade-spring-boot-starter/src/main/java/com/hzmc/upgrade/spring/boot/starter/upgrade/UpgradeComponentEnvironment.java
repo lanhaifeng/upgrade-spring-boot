@@ -55,9 +55,6 @@ public class UpgradeComponentEnvironment implements UpgradeEnvironment {
 				FileUtil.readToBuffer(stringBuffer, resource.getInputStream());
 				componentVersionDelegate.executeSqlFile(stringBuffer.toString());
 				stringBuffer.setLength(0);
-				if(!config.isNeedBackup()){
-					config.setNeedBackup(true);
-				}
 			}
 		}
 		ComponentVersion componentVersion = new ComponentVersion(

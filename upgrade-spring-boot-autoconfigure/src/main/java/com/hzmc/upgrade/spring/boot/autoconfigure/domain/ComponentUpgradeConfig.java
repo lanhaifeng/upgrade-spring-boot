@@ -57,8 +57,6 @@ public class ComponentUpgradeConfig implements Serializable {
 
 	@JsonIgnore
 	private List<String> backupTables = new ArrayList<>();
-	@JsonIgnore
-	private boolean needBackup;
 
 	private void initUpgradeResources(ResourceProvider[] resourceProviders) {
 		if(Objects.nonNull(resourceProviders) && resourceProviders.length > 0){
@@ -191,11 +189,4 @@ public class ComponentUpgradeConfig implements Serializable {
 		this.backupTableSuffix = backupTableSuffix;
 	}
 
-	public boolean isNeedBackup() {
-		return needBackup;
-	}
-
-	public void setNeedBackup(boolean needBackup) {
-		this.needBackup = needBackup;
-	}
 }

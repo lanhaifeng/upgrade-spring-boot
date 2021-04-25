@@ -5,11 +5,10 @@
 	<parent>
 		<groupId>com.hzmc</groupId>
 		<artifactId>upgrade-spring-boot</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
+		<version>1.0.0.RELEASE</version>
 	</parent>
 
 	<artifactId>upgrade-spring-boot-test</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
 	<name>upgrade-spring-boot-test</name>
 	<description>upgrade test project for Spring Boot</description>
 	<properties>

@@ -29,13 +29,13 @@ public class ComponentVersionDelegate {
 		componentVersionProcessor = componentVersionProcessorProvider.getIfAvailable();
 	}
 
-	public Boolean componentVersionExist(String componentName){
+	public Boolean componentInit(ComponentUpgradeConfig config){
 		boolean tableExist = componentVersionProcessor.tableExist(componentVersionProcessor.getVersionTableName());
-		if(!tableExist || StringUtils.isBlank(componentName)){
-			return false;
+		if(!tableExist){
+			return true;
 		}
-		ComponentVersion componentVersion = componentVersionProcessor.getComponentVersion(componentName);
-		return Objects.nonNull(componentVersion) && componentVersion.notEmpty();
+		ComponentVersion componentVersion = componentVersionProcessor.getComponentVersion(config.getComponentName());
+		return Objects.isNull(componentVersion) || StringUtils.isBlank(componentVersion.getVersion());
 	}
 
 	public Boolean componentUpgrade(ComponentUpgradeConfig config){
@@ -43,6 +43,14 @@ public class ComponentVersionDelegate {
 
 		return Objects.nonNull(componentVersion) &&
 				componentVersion.getVersion().compareTo(config.getCurrentVersion()) < 0;
+	}
+
+	public Boolean componentBackup(ComponentUpgradeConfig config){
+		if(config.getBackupTables().isEmpty()){
+			return false;
+		}
+
+		return componentInit(config) || componentUpgrade(config);
 	}
 
 	public String currentComponentVersion(String componentName){

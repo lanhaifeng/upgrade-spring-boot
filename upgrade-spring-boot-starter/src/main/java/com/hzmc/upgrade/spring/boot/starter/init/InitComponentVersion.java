@@ -32,20 +32,17 @@ public class InitComponentVersion implements InitEnvironment {
 
 	@Override
 	public void init(ComponentUpgradeConfig config) {
-		if(componentVersionDelegate.componentVersionExist(config.getComponentName())
-				|| StringUtils.isNotBlank(componentVersionDelegate.currentComponentVersion(config.getComponentName()))){
-			return;
-		}
-		//初始化版本表
-		componentVersionDelegate.initVersionTable();
-		//执行初始化操作
-		try{
-			initVersion(config);
-		}catch(Exception e){
-			logger.error("执行初始化失败，错误:" + ExceptionUtils.getFullStackTrace(e));
+		if(componentVersionDelegate.componentInit(config)){
+			//初始化版本表
+			componentVersionDelegate.initVersionTable();
+			//执行初始化操作
+			try{
+				initVersion(config);
+			}catch(Exception e){
+				logger.error("执行初始化失败，错误:" + ExceptionUtils.getFullStackTrace(e));
+			}
 		}
 	}
-
 
 	private void initVersion(ComponentUpgradeConfig config) throws IOException {
 		List<Resource> resources = config.getUpgradeResources();
@@ -54,9 +51,6 @@ public class InitComponentVersion implements InitEnvironment {
 			FileUtil.readToBuffer(stringBuffer, resource.getInputStream());
 			componentVersionDelegate.executeSqlFile(stringBuffer.toString());
 			stringBuffer.setLength(0);
-			if(!config.isNeedBackup()){
-				config.setNeedBackup(true);
-			}
 		}
 
 		String version = config.getCurrentVersion();

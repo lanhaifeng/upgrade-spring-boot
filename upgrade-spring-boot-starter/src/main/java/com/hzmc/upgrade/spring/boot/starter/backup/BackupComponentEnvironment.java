@@ -2,11 +2,8 @@ package com.hzmc.upgrade.spring.boot.starter.backup;
 
 import com.hzmc.upgrade.spring.boot.autoconfigure.domain.ComponentUpgradeConfig;
 import com.hzmc.upgrade.spring.boot.starter.processor.ComponentVersionDelegate;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
-
-import java.util.Objects;
 
 /**
  * upgrade-spring-boot
@@ -27,7 +24,7 @@ public class BackupComponentEnvironment implements BackupEnvironment {
 
 	@Override
 	public void backup(ComponentUpgradeConfig config) {
-		if(Objects.nonNull(config) && config.isNeedBackup() && !config.getBackupTables().isEmpty()){
+		if(componentVersionDelegate.componentBackup(config)){
 			componentVersionDelegate.backupTables(config);
 		}
 	}
