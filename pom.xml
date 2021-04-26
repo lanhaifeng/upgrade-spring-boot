@@ -24,9 +24,9 @@
 
 	<properties>
 		<java.version>1.8</java.version>
-        <upgrade-spring-boot-autoconfigure.version>0.0.1-SNAPSHOT</upgrade-spring-boot-autoconfigure.version>
-        <upgrade-spring-boot-starter.version>0.0.1-SNAPSHOT</upgrade-spring-boot-starter.version>
-        <upgrade-spring-boot-test.version>0.0.1-SNAPSHOT</upgrade-spring-boot-test.version>
+        <upgrade-spring-boot-autoconfigure.version>1.0.0.RELEASE</upgrade-spring-boot-autoconfigure.version>
+        <upgrade-spring-boot-starter.version>1.0.0.RELEASE</upgrade-spring-boot-starter.version>
+        <upgrade-spring-boot-test.version>1.0.0.RELEASE</upgrade-spring-boot-test.version>
 
         <!--<spring-boot.version>2.4.5</spring-boot.version>-->
 	</properties>
