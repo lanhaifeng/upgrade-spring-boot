@@ -3,12 +3,12 @@ package com.hzmc.upgrade.spring.boot.starter.processor;
 import com.hzmc.upgrade.spring.boot.autoconfigure.domain.ComponentUpgradeConfig;
 import com.hzmc.upgrade.spring.boot.starter.domain.ComponentVersion;
 import org.apache.commons.lang.StringUtils;
-import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
+import javax.validation.constraints.NotEmpty;
 import java.util.Objects;
 
 /**

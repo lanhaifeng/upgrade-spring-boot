@@ -4,14 +4,17 @@ import com.hzmc.upgrade.spring.boot.autoconfigure.constants.UpgradeConstant;
 import com.hzmc.upgrade.spring.boot.starter.domain.ComponentVersion;
 import com.hzmc.upgrade.spring.boot.starter.mybatis.ComponentVersionMapper;
 import org.apache.commons.lang.StringUtils;
+import org.apache.ibatis.session.ExecutorType;
+import org.apache.ibatis.session.SqlSession;
+import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * upgrade-spring-boot
@@ -37,12 +40,12 @@ public class MySQLComponentVersionProcessor implements ComponentVersionProcessor
 
 	private static final String BACKUP_TABLE_SQL_TEMPLATE = "CREATE TABLE %s AS SELECT * FROM %s";
 
-	private JdbcTemplate jdbcTemplate;
+	private SqlSessionTemplate sqlSessionTemplate;
 	private ComponentVersionMapper componentVersionMapper;
 
-	public MySQLComponentVersionProcessor(ObjectProvider<JdbcTemplate> jdbcTemplateProvider,
+	public MySQLComponentVersionProcessor(ObjectProvider<SqlSessionTemplate> sqlSessionTemplateProvider,
 										  ObjectProvider<ComponentVersionMapper> componentVersionMapperProvider) {
-		this.jdbcTemplate = jdbcTemplateProvider.getIfAvailable();
+		this.sqlSessionTemplate = sqlSessionTemplateProvider.getIfAvailable();
 		this.componentVersionMapper = componentVersionMapperProvider.getIfAvailable();
 	}
 
@@ -70,13 +73,22 @@ public class MySQLComponentVersionProcessor implements ComponentVersionProcessor
 
 	@Override
 	public void executeSql(String sql) {
-		jdbcTemplate.execute(sql);
+		sqlSessionTemplate.update(sql);
 	}
 
 	@Override
 	public void executeSqls(String[] sqls) {
-		jdbcTemplate.batchUpdate(Arrays.stream(sqls).filter(sql->
-				StringUtils.isNotBlank(sql.trim())).toArray(String[]::new));
+		SqlSession session = sqlSessionTemplate.getSqlSessionFactory().openSession(ExecutorType.BATCH,false);
+		List<String> sqlList = Arrays.stream(sqls).filter(sql->
+				StringUtils.isNotBlank(sql.trim())).collect(Collectors.toList());
+		int batchSize = 1000;
+		for (int i = 0; i < sqlList.size(); i++) {
+			session.update(sqlList.get(i));
+			if(i%batchSize == 0 || i == sqlList.size() - 1){
+				session.commit();
+				session.clearCache();
+			}
+		}
 	}
 
 	@Override
@@ -98,12 +110,12 @@ public class MySQLComponentVersionProcessor implements ComponentVersionProcessor
 
 	@Override
 	public void dropTable(String tableName) {
-		jdbcTemplate.execute(String.format(DROP_TABLE_SQL_TEMPLATE, tableName));
+		sqlSessionTemplate.update(String.format(DROP_TABLE_SQL_TEMPLATE, tableName));
 	}
 
 	@Override
 	public void backupTable(String sourceTableName, String targetTableName) {
-		jdbcTemplate.execute(String.format(BACKUP_TABLE_SQL_TEMPLATE, targetTableName, sourceTableName));
+		sqlSessionTemplate.update(String.format(BACKUP_TABLE_SQL_TEMPLATE, targetTableName, sourceTableName));
 	}
 
 }
