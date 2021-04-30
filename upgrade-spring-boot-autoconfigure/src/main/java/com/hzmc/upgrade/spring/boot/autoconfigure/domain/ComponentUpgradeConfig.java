@@ -7,8 +7,14 @@ import com.hzmc.upgrade.spring.boot.autoconfigure.enums.UpgradeDialect;
 import com.hzmc.upgrade.spring.boot.autoconfigure.provider.ResourceProvider;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.springframework.beans.MutablePropertyValues;
+import org.springframework.beans.PropertyValues;
+import org.springframework.boot.bind.RelaxedDataBinder;
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
 
+import javax.sql.DataSource;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import java.io.Serializable;
 import java.util.*;
@@ -40,7 +46,7 @@ public class ComponentUpgradeConfig implements Serializable {
 	@Dict(source = UpgradeDialect.class, message = "方言非法")
 	private String dialect;
 	//当前版本
-	@NotEmpty(message = "文件路径为空")
+	@NotEmpty(message = "当前版本为空")
 	@Pattern(regexp = "[0-9.]", message = "文件路径非法")
 	private String currentVersion;
 	//备份表
@@ -52,11 +58,23 @@ public class ComponentUpgradeConfig implements Serializable {
 	@Pattern(regexp = "[a-zA-Z_]", message = "备份表后缀")
 	private String backupTableSuffix;
 
+	//数据源信息
+	private UpgradeDataSource upgradeDataSource;
+
+	@JsonIgnore
+	@NotNull(message = "数据源为空")
+	private DataSource dataSource;
+
 	@JsonIgnore
 	private List<Resource> upgradeResources = new ArrayList<>();
 
 	@JsonIgnore
 	private List<String> backupTables = new ArrayList<>();
+
+	@JsonIgnore
+	public Boolean canUse(){
+		return Objects.nonNull(getUpgradeDataSource()) && getUpgradeDataSource().canUse();
+	}
 
 	private void initUpgradeResources(ResourceProvider[] resourceProviders) {
 		if(Objects.nonNull(resourceProviders) && resourceProviders.length > 0){
@@ -80,49 +98,62 @@ public class ComponentUpgradeConfig implements Serializable {
 		return backupTables;
 	}
 
-	public static ComponentUpgradeConfig load(Properties properties, ResourceProvider[] resourceProviders){
+	public void initDefault(){
+		if(StringUtils.isBlank(getUpgradeFileSuffix())){
+			setUpgradeFileSuffix(UpgradeConstant.DEFAULT_FILE_SUFFIX);
+		}
+		if(StringUtils.isBlank(getDialect())){
+			setDialect(UpgradeConstant.DEFAULT_DB_DIALECT);
+		}
+		if(StringUtils.isBlank(getCurrentVersion())){
+			setCurrentVersion(UpgradeConstant.DEFAULT_CURRENT_VERSION);
+		}
+		if(StringUtils.isBlank(getBackupTableSuffix())){
+			setBackupTableSuffix(UpgradeConstant.DEFAULT_BACKUP_TABLE_SUFFIX);
+		}
+		if (!getBackupTableSuffix().startsWith(UpgradeConstant.BACKUP_TABLE_SUFFIX_SEPARATOR)) {
+			setBackupTableSuffix(UpgradeConstant.BACKUP_TABLE_SUFFIX_SEPARATOR + getBackupTableSuffix());
+		}
+		if (StringUtils.isBlank(getUpgradeFilePath())) {
+			setUpgradeFilePath(String.format(UpgradeConstant.DEFAULT_FILE_PATH_TEMPLATE, getComponentName()));
+		}
+	}
+
+	public static ComponentUpgradeConfig loadBySpring(ApplicationContext applicationContext,
+													  Properties properties, ResourceProvider[] resourceProviders
+			, DataSource dataSource){
 		ComponentUpgradeConfig config = new ComponentUpgradeConfig();
+		try {
+			config.setUpgradeFileSuffix(UpgradeConstant.DEFAULT_FILE_SUFFIX);
+			config.setDialect(UpgradeConstant.DEFAULT_DB_DIALECT);
+			config.setCurrentVersion(UpgradeConstant.DEFAULT_CURRENT_VERSION);
+			config.setBackupTableSuffix(UpgradeConstant.DEFAULT_BACKUP_TABLE_SUFFIX);
+			config.setDataSource(dataSource);
 
-		config.setComponentName(properties.getProperty(UpgradeConstant.COMPONENT_NAME_KEY));
+			RelaxedDataBinder binder = new RelaxedDataBinder(config, UpgradeConstant.PROPERTIES_KEY_PRE);
+			PropertyValues pvs = new MutablePropertyValues(properties);
+			binder.bind(pvs);
 
-		String upgradeFileSuffix = UpgradeConstant.DEFAULT_FILE_SUFFIX;
-		if(properties.containsKey(UpgradeConstant.FILE_SUFFIX_KEY)){
-			upgradeFileSuffix = properties.getProperty(UpgradeConstant.FILE_SUFFIX_KEY);
-		}
-		config.setUpgradeFileSuffix(upgradeFileSuffix);
-
-		String upgradeFilePath = String.format(UpgradeConstant.DEFAULT_FILE_PATH_TEMPLATE, config.getComponentName());
-		if(properties.containsKey(UpgradeConstant.FILE_PATH_KEY)){
-			upgradeFilePath = properties.getProperty(UpgradeConstant.FILE_PATH_KEY);
-		}
-		config.setUpgradeFilePath(upgradeFilePath);
-
-		String dialect = UpgradeConstant.DEFAULT_DB_DIALECT;
-		if(properties.containsKey(UpgradeConstant.DB_DIALECT_KEY)){
-			dialect = properties.getProperty(UpgradeConstant.DB_DIALECT_KEY);
-		}
-		config.setDialect(dialect);
-
-		String currentVersion = UpgradeConstant.DEFAULT_CURRENT_VERSION;
-		if(properties.containsKey(UpgradeConstant.CURRENT_VERSION_KEY)){
-			currentVersion = properties.getProperty(UpgradeConstant.CURRENT_VERSION_KEY);
-		}
-		config.setCurrentVersion(currentVersion);
-
-		if(properties.containsKey(UpgradeConstant.BACKUP_TABLE_KEY)){
-			config.setBackupTable(properties.getProperty(UpgradeConstant.BACKUP_TABLE_KEY));
-		}
-
-		String backupTableSuffix = UpgradeConstant.DEFAULT_BACKUP_TABLE_SUFFIX;
-		if(properties.containsKey(UpgradeConstant.BACKUP_TABLE_SUFFIX_KEY)){
-			backupTableSuffix = properties.getProperty(UpgradeConstant.BACKUP_TABLE_SUFFIX_KEY);
-			if(!backupTableSuffix.startsWith(UpgradeConstant.BACKUP_TABLE_SUFFIX_SEPARATOR)){
-				backupTableSuffix = UpgradeConstant.BACKUP_TABLE_SUFFIX_SEPARATOR + backupTableSuffix;
+			if (!config.getBackupTableSuffix().startsWith(UpgradeConstant.BACKUP_TABLE_SUFFIX_SEPARATOR)) {
+				config.setBackupTableSuffix(UpgradeConstant.BACKUP_TABLE_SUFFIX_SEPARATOR + config.getBackupTableSuffix());
 			}
-		}
-		config.setBackupTableSuffix(backupTableSuffix);
+			if (StringUtils.isBlank(config.getUpgradeFilePath())) {
+				config.setUpgradeFilePath(String.format(UpgradeConstant.DEFAULT_FILE_PATH_TEMPLATE, config.getComponentName()));
+			}
+			if(config.canUse()){
+				if(StringUtils.isNotBlank(config.getUpgradeDataSource().getRef())
+						&& applicationContext.containsBean(config.getUpgradeDataSource().getRef())){
+					config.setDataSource(applicationContext.getBean(config.getUpgradeDataSource().getRef(),
+							DataSource.class));
+				} else {
+					config.setDataSource(config.getUpgradeDataSource().buildDataSource());
+				}
+			}
 
-		config.initUpgradeResources(resourceProviders);
+			config.initUpgradeResources(resourceProviders);
+		} catch (Exception e) {
+			throw new RuntimeException(e.getMessage(), e);
+		}
 
 		return config;
 	}
@@ -187,6 +218,22 @@ public class ComponentUpgradeConfig implements Serializable {
 
 	public void setBackupTableSuffix(String backupTableSuffix) {
 		this.backupTableSuffix = backupTableSuffix;
+	}
+
+	public UpgradeDataSource getUpgradeDataSource() {
+		return upgradeDataSource;
+	}
+
+	public void setUpgradeDataSource(UpgradeDataSource upgradeDataSource) {
+		this.upgradeDataSource = upgradeDataSource;
+	}
+
+	public DataSource getDataSource() {
+		return dataSource;
+	}
+
+	public void setDataSource(DataSource dataSource) {
+		this.dataSource = dataSource;
 	}
 
 }

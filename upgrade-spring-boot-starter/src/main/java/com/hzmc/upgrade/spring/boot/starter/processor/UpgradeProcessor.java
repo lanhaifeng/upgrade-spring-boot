@@ -1,6 +1,5 @@
 package com.hzmc.upgrade.spring.boot.starter.processor;
 
-import org.apache.commons.lang.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 
 /**

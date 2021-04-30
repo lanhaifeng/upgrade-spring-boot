@@ -34,7 +34,7 @@ public class InitComponentVersion implements InitEnvironment {
 	public void init(ComponentUpgradeConfig config) {
 		if(componentVersionDelegate.componentInit(config)){
 			//初始化版本表
-			componentVersionDelegate.initVersionTable();
+			componentVersionDelegate.initVersionTable(config);
 			//执行初始化操作
 			try{
 				initVersion(config);
@@ -49,7 +49,7 @@ public class InitComponentVersion implements InitEnvironment {
 		StringBuffer stringBuffer = new StringBuffer();
 		for (Resource resource : resources) {
 			FileUtil.readToBuffer(stringBuffer, resource.getInputStream());
-			componentVersionDelegate.executeSqlFile(stringBuffer.toString());
+			componentVersionDelegate.executeSqlFile(config, stringBuffer.toString());
 			stringBuffer.setLength(0);
 		}
 
@@ -64,7 +64,7 @@ public class InitComponentVersion implements InitEnvironment {
 
 		ComponentVersion componentVersion = new ComponentVersion(
 				config.getComponentName(), version, System.currentTimeMillis(), System.currentTimeMillis());
-		componentVersionDelegate.addComponentVersion(componentVersion);
+		componentVersionDelegate.addComponentVersion(config, componentVersion);
 	}
 
 }

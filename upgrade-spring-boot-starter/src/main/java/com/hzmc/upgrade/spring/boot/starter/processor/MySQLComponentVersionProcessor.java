@@ -4,10 +4,7 @@ import com.hzmc.upgrade.spring.boot.autoconfigure.constants.UpgradeConstant;
 import com.hzmc.upgrade.spring.boot.starter.domain.ComponentVersion;
 import com.hzmc.upgrade.spring.boot.starter.mybatis.ComponentVersionMapper;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 import java.util.List;
@@ -21,8 +18,6 @@ import java.util.Objects;
  * @author lanhaifeng
  * @since
  **/
-@ConditionalOnProperty(prefix = "upgrade.db", name = "dialect", havingValue = "MYSQL", matchIfMissing = true)
-@Component
 public class MySQLComponentVersionProcessor implements ComponentVersionProcessor {
 
 	private static final String VERSION_TABLE_SQL = "CREATE TABLE `" + UpgradeConstant.VERSION_TABLE_NAME + "`\n" +
@@ -40,10 +35,9 @@ public class MySQLComponentVersionProcessor implements ComponentVersionProcessor
 	private JdbcTemplate jdbcTemplate;
 	private ComponentVersionMapper componentVersionMapper;
 
-	public MySQLComponentVersionProcessor(ObjectProvider<JdbcTemplate> jdbcTemplateProvider,
-										  ObjectProvider<ComponentVersionMapper> componentVersionMapperProvider) {
-		this.jdbcTemplate = jdbcTemplateProvider.getIfAvailable();
-		this.componentVersionMapper = componentVersionMapperProvider.getIfAvailable();
+	public MySQLComponentVersionProcessor(JdbcTemplate jdbcTemplate, ComponentVersionMapper componentVersionMapper) {
+		this.jdbcTemplate = jdbcTemplate;
+		this.componentVersionMapper = componentVersionMapper;
 	}
 
 	@Override

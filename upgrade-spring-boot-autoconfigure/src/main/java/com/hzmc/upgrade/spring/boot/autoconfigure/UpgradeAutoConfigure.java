@@ -1,23 +1,20 @@
 package com.hzmc.upgrade.spring.boot.autoconfigure;
 
-import com.baseframework.utils.util.JacksonUtil;
-import com.baseframework.utils.util.ValidateUtils;
-import com.hzmc.upgrade.spring.boot.autoconfigure.domain.ComponentUpgradeConfig;
+import com.hzmc.upgrade.spring.boot.autoconfigure.domain.UpgradeConfiguration;
 import com.hzmc.upgrade.spring.boot.autoconfigure.provider.ResourceProvider;
-import org.apache.commons.lang.exception.ExceptionUtils;
 import org.mybatis.spring.annotation.MapperScan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.servlet.ServletComponentScan;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.Resource;
+import org.springframework.core.env.ConfigurableEnvironment;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
+import javax.sql.DataSource;
 
 /**
  * upgrade-spring-boot
@@ -30,7 +27,6 @@ import java.util.stream.Collectors;
 @EnableConfigurationProperties(UpgradeProperties.class)
 @ComponentScan(basePackages = {"com.hzmc.upgrade.spring.boot"})
 @ServletComponentScan(basePackages = {"com.hzmc.upgrade.spring.boot"})
-@MapperScan(basePackages = {"com.hzmc.upgrade.spring.boot.**.mybatis**"})
 @Configuration
 public class UpgradeAutoConfigure {
 
@@ -40,45 +36,27 @@ public class UpgradeAutoConfigure {
 
 	private final ResourceProvider[] resourceProviders;
 
-	private Map<String, ComponentUpgradeConfig> configs = new ConcurrentHashMap<>();
+	private DataSource dataSource;
 
-	public UpgradeAutoConfigure(UpgradeProperties upgradeProperties, ObjectProvider<ResourceProvider[]> resourceProvider) {
+	private ApplicationContext applicationContext;
+
+	private ConfigurableEnvironment environment;
+
+	public UpgradeAutoConfigure(UpgradeProperties upgradeProperties,
+								ApplicationContext applicationContext,
+								ObjectProvider<ResourceProvider[]> resourceProvider,
+								ObjectProvider<DataSource> dataSourceProvider,
+								ObjectProvider<ConfigurableEnvironment> environmentProvider) {
 		this.upgradeProperties = upgradeProperties;
 		this.resourceProviders = resourceProvider.getIfAvailable();
-		initConfigs(resourceProviders);
+		this.dataSource = dataSourceProvider.getIfAvailable();
+		this.applicationContext = applicationContext;
+		this.environment = environmentProvider.getIfAvailable();
 	}
 
-	private void initConfigs(ResourceProvider[] resourceProviders) {
-		try {
-			Properties properties = new Properties();
-			List<ComponentUpgradeConfig> targetConfigs = new ArrayList<>();
-
-			if(Objects.nonNull(upgradeProperties.getConfigResources()) && upgradeProperties.getConfigResources().length > 0){
-				for (Resource resource : upgradeProperties.getConfigResources()) {
-					properties.load(resource.getInputStream());
-					targetConfigs.add(ComponentUpgradeConfig.load(properties, resourceProviders));
-					properties.clear();
-				}
-			}
-
-			List<String> messages;
-			for (ComponentUpgradeConfig targetConfig : targetConfigs) {
-				logger.info("模块配置信息：", JacksonUtil.bean2Json(targetConfig));
-				messages = ValidateUtils.validate(targetConfigs);
-				if(Objects.nonNull(messages) && messages.size() > 0){
-					logger.error(messages.toString());
-					throw new RuntimeException("模块升级配置非法");
-				}
-			}
-
-			configs.putAll(targetConfigs.stream().collect(Collectors.toMap(ComponentUpgradeConfig::getComponentName,
-					entry-> entry)));
-		} catch (Exception e) {
-			logger.error("加载配置文件失败" + ExceptionUtils.getFullStackTrace(e));
-		}
-	}
-
-	public Map<String, ComponentUpgradeConfig> getConfigs() {
-		return configs;
+	@Bean
+	public UpgradeConfiguration configuration(){
+		return UpgradeConfigurationBuilder.create(
+				upgradeProperties, applicationContext, resourceProviders, environment, dataSource).build();
 	}
 }

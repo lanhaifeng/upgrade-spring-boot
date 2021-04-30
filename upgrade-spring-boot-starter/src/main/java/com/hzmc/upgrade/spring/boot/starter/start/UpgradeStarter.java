@@ -1,13 +1,12 @@
 package com.hzmc.upgrade.spring.boot.starter.start;
 
-import com.hzmc.upgrade.spring.boot.autoconfigure.UpgradeAutoConfigure;
+import com.hzmc.upgrade.spring.boot.autoconfigure.domain.UpgradeConfiguration;
 import com.hzmc.upgrade.spring.boot.starter.manager.ComponentManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
 import java.util.Objects;
@@ -24,20 +23,19 @@ import java.util.Objects;
 public class UpgradeStarter implements InitializingBean {
 
 	private static Logger logger = LoggerFactory.getLogger(UpgradeStarter.class);
-	private UpgradeAutoConfigure upgradeAutoConfigure;
 	private ComponentManager componentManager;
+	private UpgradeConfiguration configuration;
 
-	public UpgradeStarter(UpgradeAutoConfigure upgradeAutoConfigure,
-						  ObjectProvider<ComponentManager> componentManagerProvider) {
-		this.upgradeAutoConfigure = upgradeAutoConfigure;
+	public UpgradeStarter(ObjectProvider<ComponentManager> componentManagerProvider,
+						  ObjectProvider<UpgradeConfiguration> configurationProvider) {
 		this.componentManager = componentManagerProvider.getIfAvailable();
+		this.configuration = configurationProvider.getIfAvailable();
 	}
 
-	@Transactional
 	@PostConstruct
 	public void start(){
 		logger.info("upgrade execute start");
-		upgradeAutoConfigure.getConfigs().values().forEach(conf -> {
+		configuration.getComponentUpgradeConfigs().forEach(conf -> {
 			logger.info("{} start upgrade", conf.getComponentName());
 			componentManager.doUpgrade(conf);
 			logger.info("{} end upgrade", conf.getComponentName());

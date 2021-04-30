@@ -45,7 +45,7 @@ public class UpgradeComponentEnvironment implements UpgradeEnvironment {
 
 	private void upgradeEnvironment(ComponentUpgradeConfig config) throws IOException {
 		List<Resource> resources = config.getUpgradeResources();
-		String lastVersion = componentVersionDelegate.currentComponentVersion(config.getComponentName());
+		String lastVersion = componentVersionDelegate.currentComponentVersion(config);
 		String fileVersion;
 		StringBuffer stringBuffer = new StringBuffer();
 		for (Resource resource : resources) {
@@ -53,12 +53,12 @@ public class UpgradeComponentEnvironment implements UpgradeEnvironment {
 			fileVersion = fileVersion.substring(0, fileVersion.lastIndexOf(config.getUpgradeFileSuffix()));
 			if(fileVersion.compareTo(lastVersion) > 0 && config.getCurrentVersion().compareTo(fileVersion) >= 0){
 				FileUtil.readToBuffer(stringBuffer, resource.getInputStream());
-				componentVersionDelegate.executeSqlFile(stringBuffer.toString());
+				componentVersionDelegate.executeSqlFile(config, stringBuffer.toString());
 				stringBuffer.setLength(0);
 			}
 		}
 		ComponentVersion componentVersion = new ComponentVersion(
 				config.getComponentName(), config.getCurrentVersion(), System.currentTimeMillis());
-		componentVersionDelegate.updateComponentVersion(componentVersion);
+		componentVersionDelegate.updateComponentVersion(config, componentVersion);
 	}
 }
