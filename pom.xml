@@ -44,6 +44,14 @@
         </snapshotRepository>
     </distributionManagement>
 
+    <repositories>
+        <repository>
+            <id>local_nexus</id>
+            <name>local nexus</name>
+            <url>http://nexus.mchz.com.cn:8081/nexus/content/groups/public/</url>
+        </repository>
+    </repositories>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
