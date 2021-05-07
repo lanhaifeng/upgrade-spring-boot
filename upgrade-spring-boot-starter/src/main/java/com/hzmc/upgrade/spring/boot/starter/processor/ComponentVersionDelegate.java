@@ -2,13 +2,16 @@ package com.hzmc.upgrade.spring.boot.starter.processor;
 
 import com.hzmc.upgrade.spring.boot.autoconfigure.domain.ComponentUpgradeConfig;
 import com.hzmc.upgrade.spring.boot.starter.domain.ComponentVersion;
+import com.hzmc.upgrade.spring.boot.starter.factory.ComponentVersionProcessorFactory;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 import javax.validation.constraints.NotEmpty;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -23,23 +26,33 @@ import java.util.Objects;
 public class ComponentVersionDelegate {
 
 	private static Logger logger = LoggerFactory.getLogger(ComponentVersionDelegate.class);
-	private ComponentVersionProcessor componentVersionProcessor;
+	private Map<String, ComponentVersionProcessor> processorMap = new HashMap<>();
 
-	public ComponentVersionDelegate(ObjectProvider<ComponentVersionProcessor> componentVersionProcessorProvider) {
-		componentVersionProcessor = componentVersionProcessorProvider.getIfAvailable();
+	public ComponentVersionProcessor getComponentVersionProcessor(ComponentUpgradeConfig config) {
+		try{
+			if(!processorMap.containsKey(config.getComponentName())){
+				ComponentVersionProcessor processor = new ComponentVersionProcessorFactory(config).getObject();
+				processorMap.put(config.getComponentName(), processor);
+			}
+			return processorMap.get(config.getComponentName());
+		}catch(Exception e){
+			logger.error("构造ComponentVersionProcessor错误：" + ExceptionUtils.getFullStackTrace(e));
+			throw new RuntimeException(e.getMessage());
+		}
 	}
 
 	public Boolean componentInit(ComponentUpgradeConfig config){
-		boolean tableExist = componentVersionProcessor.tableExist(componentVersionProcessor.getVersionTableName());
+		ComponentVersionProcessor processor = getComponentVersionProcessor(config);
+		boolean tableExist = processor.tableExist(processor.getVersionTableName());
 		if(!tableExist){
 			return true;
 		}
-		ComponentVersion componentVersion = componentVersionProcessor.getComponentVersion(config.getComponentName());
+		ComponentVersion componentVersion = processor.getComponentVersion(config.getComponentName());
 		return Objects.isNull(componentVersion) || StringUtils.isBlank(componentVersion.getVersion());
 	}
 
 	public Boolean componentUpgrade(ComponentUpgradeConfig config){
-		ComponentVersion componentVersion = componentVersionProcessor.getComponentVersion(config.getComponentName());
+		ComponentVersion componentVersion = getComponentVersionProcessor(config).getComponentVersion(config.getComponentName());
 
 		return Objects.nonNull(componentVersion) &&
 				componentVersion.getVersion().compareTo(config.getCurrentVersion()) < 0;
@@ -53,34 +66,35 @@ public class ComponentVersionDelegate {
 		return componentInit(config) || componentUpgrade(config);
 	}
 
-	public String currentComponentVersion(String componentName){
-		ComponentVersion componentVersion = componentVersionProcessor.getComponentVersion(componentName);
+	public String currentComponentVersion(ComponentUpgradeConfig config){
+		ComponentVersion componentVersion = getComponentVersionProcessor(config).getComponentVersion(config.getComponentName());
 		return Objects.nonNull(componentVersion) ? componentVersion.getVersion() : null;
 	}
 
-	public void initVersionTable(){
-		if(!componentVersionProcessor.tableExist(componentVersionProcessor.getVersionTableName())){
-			componentVersionProcessor.executeSql(componentVersionProcessor.getVersionInitTableSql());
+	public void initVersionTable(ComponentUpgradeConfig config){
+		ComponentVersionProcessor processor = getComponentVersionProcessor(config);
+		if(!processor.tableExist(processor.getVersionTableName())){
+			processor.executeSql(processor.getVersionInitTableSql());
 		}
 	}
 
-	public void addComponentVersion(ComponentVersion componentVersion){
-		componentVersionProcessor.addComponentVersion(componentVersion);
+	public void addComponentVersion(ComponentUpgradeConfig config, ComponentVersion componentVersion){
+		getComponentVersionProcessor(config).addComponentVersion(componentVersion);
 	}
 
-	public void updateComponentVersion(ComponentVersion componentVersion){
-		componentVersionProcessor.updateComponentVersion(componentVersion);
+	public void updateComponentVersion(ComponentUpgradeConfig config, ComponentVersion componentVersion){
+		getComponentVersionProcessor(config).updateComponentVersion(componentVersion);
 	}
 
-	public void executeSql(@NotEmpty String sql){
+	public void executeSql(ComponentUpgradeConfig config, @NotEmpty String sql){
 		if(StringUtils.isNotBlank(sql)){
-			componentVersionProcessor.executeSql(sql);
+			getComponentVersionProcessor(config).executeSql(sql);
 		}
 	}
 
-	public void executeSqlFile(@NotEmpty String sqlFileContent){
+	public void executeSqlFile(ComponentUpgradeConfig config, @NotEmpty String sqlFileContent){
 		if(StringUtils.isNotBlank(sqlFileContent)){
-			componentVersionProcessor.executeSqlFile(sqlFileContent);
+			getComponentVersionProcessor(config).executeSqlFile(sqlFileContent);
 		}
 	}
 
@@ -88,18 +102,19 @@ public class ComponentVersionDelegate {
 		if(Objects.isNull(config) || Objects.isNull(config.getBackupTables())){
 			return;
 		}
+		ComponentVersionProcessor processor = getComponentVersionProcessor(config);
 		config.getBackupTables().forEach(tableName->{
 			String backupTable = tableName + config.getBackupTableSuffix();
-			if(!componentVersionProcessor.tableExist(tableName)){
+			if(!processor.tableExist(tableName)){
 				logger.warn("待备份表{}不存在，不需备份", tableName);
 				return;
 			}
-			if(componentVersionProcessor.tableExist(backupTable)){
+			if(processor.tableExist(backupTable)){
 				logger.info("备份表{}已存在，删除备份表{}", backupTable, backupTable);
-				componentVersionProcessor.dropTable(backupTable);
+				processor.dropTable(backupTable);
 			}
 			logger.info("开始备份表{}到{}", tableName, backupTable);
-			componentVersionProcessor.backupTable(tableName, backupTable);
+			processor.backupTable(tableName, backupTable);
 		});
 	}
 }

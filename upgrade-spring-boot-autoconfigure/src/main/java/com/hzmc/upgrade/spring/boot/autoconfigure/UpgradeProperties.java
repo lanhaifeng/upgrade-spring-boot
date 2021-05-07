@@ -7,7 +7,7 @@ import org.springframework.core.io.Resource;
 /**
  * upgrade-spring-boot
  * 2021/4/18 23:52
- * 描述一下类的用途
+ * 升级组件配置信息
  *
  * @author lanhaifeng
  * @since
@@ -22,5 +22,9 @@ public class UpgradeProperties {
 
     public Resource[] getConfigResources() {
         return configResources;
+    }
+
+    public void setConfigResources(Resource[] configResources) {
+        this.configResources = configResources;
     }
 }

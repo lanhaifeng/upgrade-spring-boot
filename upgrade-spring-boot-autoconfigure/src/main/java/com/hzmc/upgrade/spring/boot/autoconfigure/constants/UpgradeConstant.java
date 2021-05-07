@@ -29,13 +29,6 @@ public class UpgradeConstant {
 	//备份表字符串分隔符
 	public static final String BACKUP_TABLE_STRING_SEPARATOR = ",";
 
-
-	public static final String COMPONENT_NAME_KEY = "upgrade.component-name";
-	public static final String FILE_SUFFIX_KEY = "upgrade.file-suffix";
-	public static final String FILE_PATH_KEY = "upgrade.file-path";
-	public static final String DB_DIALECT_KEY = "upgrade.db-dialect";
-	public static final String CURRENT_VERSION_KEY = "upgrade.current-version";
-	public static final String BACKUP_TABLE_KEY = "upgrade.backup-table";
-	public static final String BACKUP_TABLE_SUFFIX_KEY = "upgrade.backup-table-suffix";
-
+	//properties文件中，key前缀
+	public static final String PROPERTIES_KEY_PRE = "upgrade";
 }
