@@ -88,7 +88,7 @@ public class UpgradeConfigurationBuilder {
 					properties.load(resource.getInputStream());
 					pvs.addLast(new PropertiesPropertySource(UPGRADE_PROPERTIES_NAME, properties));
 
-					componentUpgradeConfig = binder.bindOrCreate(UpgradeProperties.UPGRADE_PREFIX, ComponentUpgradeConfig.class);
+					componentUpgradeConfig = binder.bind(UpgradeProperties.UPGRADE_PREFIX, ComponentUpgradeConfig.class).get();
 					componentUpgradeConfig.initDefault();
 
 					targetConfigs.add(componentUpgradeConfig);
