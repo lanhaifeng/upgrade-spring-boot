@@ -67,6 +67,11 @@ public class ComponentVersionDelegate {
 	}
 
 	public Boolean componentRollback(ComponentUpgradeConfig config){
+		ComponentVersionProcessor processor = getComponentVersionProcessor(config);
+		boolean tableExist = processor.tableExist(processor.getVersionTableName());
+		if(!tableExist){
+			return false;
+		}
 		ComponentVersion componentVersion = getComponentVersionProcessor(config).getComponentVersion(config.getComponentName());
 
 		return Objects.nonNull(componentVersion) &&
