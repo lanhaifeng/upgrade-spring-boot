@@ -4,8 +4,10 @@ import com.hzmc.upgrade.spring.boot.autoconfigure.domain.UpgradeConfiguration;
 import com.hzmc.upgrade.spring.boot.starter.manager.ComponentManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -20,7 +22,7 @@ import java.util.Objects;
  * @since
  **/
 @Component
-public class UpgradeStarter implements InitializingBean {
+public class UpgradeStarter implements InitializingBean, BeanPostProcessor {
 
 	private static Logger logger = LoggerFactory.getLogger(UpgradeStarter.class);
 	private ComponentManager componentManager;
@@ -47,5 +49,15 @@ public class UpgradeStarter implements InitializingBean {
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		Objects.requireNonNull(componentManager, "未指定组件升级管理器ComponentManager");
+	}
+
+	@Override
+	public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+		return bean;
+	}
+
+	@Override
+	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+		return bean;
 	}
 }
