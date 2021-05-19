@@ -10,6 +10,7 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.bind.Binder;
+import org.springframework.boot.context.properties.bind.PropertySourcesPlaceholdersResolver;
 import org.springframework.boot.context.properties.source.ConfigurationPropertySources;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -80,7 +81,8 @@ public class UpgradeConfigurationBuilder {
 			List<ComponentUpgradeConfig> targetConfigs = new ArrayList<>();
 
 			MutablePropertySources pvs = new MutablePropertySources(environment.getPropertySources());
-			Binder binder = new Binder(ConfigurationPropertySources.from(pvs));
+			PropertySourcesPlaceholdersResolver resolver = new PropertySourcesPlaceholdersResolver(pvs);
+			Binder binder = new Binder(ConfigurationPropertySources.from(pvs), resolver);
 
 			ComponentUpgradeConfig componentUpgradeConfig;
 			if(Objects.nonNull(upgradeProperties.getConfigResources()) && upgradeProperties.getConfigResources().length > 0){

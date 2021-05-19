@@ -66,6 +66,13 @@ public class ComponentVersionDelegate {
 		return componentInit(config) || componentUpgrade(config);
 	}
 
+	public Boolean componentRollback(ComponentUpgradeConfig config){
+		ComponentVersion componentVersion = getComponentVersionProcessor(config).getComponentVersion(config.getComponentName());
+
+		return Objects.nonNull(componentVersion) &&
+				componentVersion.getVersion().compareTo(config.getCurrentVersion()) > 0;
+	}
+
 	public String currentComponentVersion(ComponentUpgradeConfig config){
 		ComponentVersion componentVersion = getComponentVersionProcessor(config).getComponentVersion(config.getComponentName());
 		return Objects.nonNull(componentVersion) ? componentVersion.getVersion() : null;
@@ -115,6 +122,29 @@ public class ComponentVersionDelegate {
 			}
 			logger.info("开始备份表{}到{}", tableName, backupTable);
 			processor.backupTable(tableName, backupTable);
+		});
+	}
+
+	public void rollback(ComponentUpgradeConfig config){
+		if(Objects.isNull(config) || Objects.isNull(config.getBackupTables())){
+			return;
+		}
+		ComponentVersionProcessor processor = getComponentVersionProcessor(config);
+		config.getBackupTables().forEach(tableName->{
+			String backupTable = tableName + config.getBackupTableSuffix();
+			if(!processor.tableExist(backupTable)){
+				logger.info("备份表{}不存在，删除待还原表{}", backupTable, tableName);
+				processor.dropTable(tableName);
+				return;
+			}
+
+			if(processor.tableExist(tableName)){
+				logger.info("待还原表{}存在，删除待还原表{}", backupTable, backupTable);
+				processor.dropTable(tableName);
+			}
+
+			logger.info("开始还原表{}到{}", backupTable, tableName);
+			processor.backupTable(backupTable, tableName);
 		});
 	}
 }
