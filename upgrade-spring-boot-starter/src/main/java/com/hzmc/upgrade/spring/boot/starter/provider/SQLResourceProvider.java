@@ -46,9 +46,12 @@ public class SQLResourceProvider implements ResourceProvider {
 
 		Iterator<Resource> iterator = resources.iterator();
 		Resource resource;
+		String fileName;
 		while (iterator.hasNext()){
 			resource = iterator.next();
-			if(!resource.getFilename().endsWith(suffix)){
+			fileName = resource.getFilename();
+			if(!fileName.endsWith(suffix) || !StringUtils.isNumeric(
+					fileName.substring(0, fileName.lastIndexOf(suffix)).replaceAll("\\.", ""))){
 				iterator.remove();
 			}
 		}
